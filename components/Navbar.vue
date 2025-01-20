@@ -4,10 +4,12 @@
     :class="{ 'scrolled': isScrolled }"
   >
     <div class="container">
+      <!-- Logo -->
       <a class="navbar-brand d-flex align-items-center" href="#">
-        <img src="/gs-logo-white.svg" alt="Logo" class="logo me-2" />
+        <img src="/gs-logo-white.svg" alt="Logo" class="logo" />
       </a>
 
+      <!-- Navbar Toggle Button -->
       <button
         class="navbar-toggler"
         type="button"
@@ -20,6 +22,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
 
+      <!-- Navbar Menu -->
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="#">MAÇ GÜNÜ</a></li>
@@ -30,6 +33,7 @@
           <li class="nav-item"><a class="nav-link" href="#">SHOP BY PLAYER</a></li>
         </ul>
 
+        <!-- Search Box -->
         <form class="d-flex ms-3">
           <input
             class="form-control me-2"
@@ -42,77 +46,73 @@
           </button>
         </form>
 
+        <!-- Icons Section -->
         <div class="icons ms-3 d-flex align-items-center">
-          <i class="bi bi-person me-3 dropdown-toggle" id="userMenu" data-bs-toggle="dropdown"></i>
-          <ul class="dropdown-menu" aria-labelledby="userMenu">
-            <li><a class="dropdown-item" href="#">Hesabım</a></li>
-            <li><a class="dropdown-item" href="#">Siparişlerim</a></li>
-            <li><a class="dropdown-item" href="#">Çıkış Yap</a></li>
-          </ul>
+          <!-- User Icon -->
+          <div v-if="isLoggedIn" class="dropdown">
+            <i
+              class="bi bi-person dropdown-toggle"
+              id="userMenu"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            ></i>
+            <ul class="dropdown-menu" aria-labelledby="userMenu">
+              <li><a class="dropdown-item" href="#">Hesabım</a></li>
+              <li><a class="dropdown-item" href="#">Siparişlerim</a></li>
+              <li>
+                <button class="dropdown-item" @click="logout">Çıkış Yap</button>
+              </li>
+            </ul>
+          </div>
+          <div v-else>
+            <a href="/login" class="nav-link">Giriş Yap</a>
+          </div>
 
-          <i class="bi bi-star me-3"></i>
-          <div class="cart-info" @click="toggleCartPopup">
+          <!-- Favorites Icon -->
+          <i class="bi bi-star ms-3"></i>
+
+          <!-- Cart Icon -->
+          <div class="cart ms-3">
             <i class="bi bi-cart"></i>
-            <span class="cart-details">
-              {{ cartItems.length }} ürün - {{ totalPrice }}₺
-            </span>
           </div>
         </div>
       </div>
     </div>
-
-    <CartPopup
-      :cartVisible="cartPopupVisible"
-      :cartItems="cartItems"
-      @remove-item="removeItemFromCart"
-    />
   </nav>
 </template>
 
-<script>
-import CartPopup from "./CartPopup.vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { isUserLoggedIn, logoutUser } from "@/utils/authService";
 
-export default {
-  components: {
-    CartPopup,
-  },
-  props: {
-    cartItems: {
-      type: Array,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      isScrolled: false,
-      cartPopupVisible: false,
-    };
-  },
-  computed: {
-    totalPrice() {
-      return this.cartItems.reduce((sum, item) => sum + item.price, 0).toFixed(2);
-    },
-  },
-  mounted() {
-    window.addEventListener("scroll", this.handleScroll);
-  },
-  beforeUnmount() {
-    window.removeEventListener("scroll", this.handleScroll);
-  },
-  methods: {
-    handleScroll() {
-      this.isScrolled = window.scrollY > 50;
-    },
-    toggleCartPopup() {
-      this.cartPopupVisible = !this.cartPopupVisible;
-    },
-    removeItemFromCart(index) {
-      this.$emit("remove-item", index);
-    },
-  },
+const isScrolled = ref(false);
+const isLoggedIn = ref(false);
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 50;
 };
+
+const checkLoginStatus = () => {
+  isLoggedIn.value = isUserLoggedIn();
+};
+
+const logout = async () => {
+  await logoutUser();
+  checkLoginStatus();
+};
+
+onMounted(() => {
+  window.addEventListener("scroll", handleScroll);
+  checkLoginStatus();
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
 </script>
+
 <style scoped>
+/* Navbar */
 .navbar {
   background-color: transparent;
   transition: background-color 0.3s, color 0.3s;
@@ -122,10 +122,17 @@ export default {
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Navbar Links */
 .nav-link {
-  color: white;
-  font-weight: bold;
-  transition: color 0.3s;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  padding: 0 10px;
+  transition: color 0.3s ease;
+}
+.nav-link:hover {
+  color: #d81b26;
 }
 .navbar.scrolled .nav-link {
   color: black;
@@ -134,42 +141,31 @@ export default {
   color: #c8102e;
 }
 
+/* Icons */
 .icons {
   display: flex;
   align-items: center;
+  gap: 15px;
 }
-
 .icons i {
   font-size: 1.5rem;
-  color: white;
+  color: black;
   transition: color 0.3s;
 }
-.navbar.scrolled .icons i {
-  color: black;
-}
-.navbar.scrolled .icons i:hover {
-  color: #ffc72c;
+.icons i:hover {
+  color: #d81b26;
 }
 
-.cart-info {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
+/* Search Box */
+.form-control {
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  height: 36px;
 }
 
-.cart-details {
-  margin-left: 10px;
-  font-size: 0.9rem;
-  color: white;
-  transition: color 0.3s;
-}
-.navbar.scrolled .cart-details {
-  color: black;
-}
-
+/* Logo */
 .logo {
-  width: 150px;
+  width: 120px;
   height: auto;
 }
 </style>
