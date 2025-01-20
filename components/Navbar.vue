@@ -5,7 +5,7 @@
   >
     <div class="container">
       <!-- Logo -->
-      <a class="navbar-brand d-flex align-items-center" href="#">
+      <a class="navbar-brand d-flex align-items-center" href="/">
         <img src="/gs-logo-white.svg" alt="Logo" class="logo" />
       </a>
 
@@ -57,7 +57,7 @@
               aria-expanded="false"
             ></i>
             <ul class="dropdown-menu" aria-labelledby="userMenu">
-              <li><a class="dropdown-item" href="#">Hesabım</a></li>
+              <li><a class="dropdown-item" href="/account">Hesabım</a></li>
               <li><a class="dropdown-item" href="#">Siparişlerim</a></li>
               <li>
                 <button class="dropdown-item" @click="logout">Çıkış Yap</button>
@@ -65,7 +65,12 @@
             </ul>
           </div>
           <div v-else>
-            <a href="/login" class="nav-link">Giriş Yap</a>
+            <a class="navbar-brand d-flex align-items-center" href="/login">
+              <i
+              class="bi bi-person"
+              id="userMenu"
+            ></i>
+            </a>
           </div>
 
           <!-- Favorites Icon -->
@@ -73,7 +78,9 @@
 
           <!-- Cart Icon -->
           <div class="cart ms-3">
-            <i class="bi bi-cart"></i>
+            <i class="bi bi-cart" @click="toggleCart"></i>
+             <!-- Cart Button and CartView -->
+            <CartView v-if="showCart" /> <!-- CartView component displayed when showCart is true -->
           </div>
         </div>
       </div>
@@ -82,11 +89,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { isUserLoggedIn, logoutUser } from "@/utils/authService";
+import CartView from '@/components/CartView.vue';  // CartView bileşenini import ettik
 
 const isScrolled = ref(false);
 const isLoggedIn = ref(false);
+const showCart = ref(false); // Cart görünürlüğünü kontrol etmek için ref
+
+// Sepet görünümünü açıp kapatmak için fonksiyon
+const toggleCart = () => {
+  showCart.value = !showCart.value;
+};
 
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 50;

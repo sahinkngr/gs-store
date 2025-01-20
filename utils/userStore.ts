@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { getAuth } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/utils/firebase"; // Firebase config dosyasına göre
 
 export const useUserStore = defineStore("userStore", {
@@ -27,8 +27,7 @@ export const useUserStore = defineStore("userStore", {
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
-            // Veriyi al ve Pinia store'a kaydet
-            this.userData = docSnap.data() as typeof this.userData;
+            this.userData = docSnap.data() as typeof this.userData; // Veriyi al
           } else {
             console.error("Firestore'dan kullanıcı verisi alınamadı.");
           }
@@ -44,6 +43,12 @@ export const useUserStore = defineStore("userStore", {
       }
     },
 
+    startDataFetchInterval() {
+      // Veriyi her 1 dakikada bir yeniden çek
+      setInterval(() => {
+        this.fetchUserData();
+      }, 60);
+    },
     async updateUserData(newData: typeof this.userData) {
       try {
         const auth = getAuth();
@@ -52,8 +57,7 @@ export const useUserStore = defineStore("userStore", {
         if (user) {
           // Firebase Firestore'a verileri güncelle
           const userRef = doc(db, "users", user.uid);
-          await setDoc(userRef, newData, { merge: true });
-          this.userData = newData; // Verileri güncelle
+          await setDoc(userRef, newData, { merge: true }); // Veriyi merge ile güncelle
         } else {
           console.error("Kullanıcı oturumu açık değil.");
         }
