@@ -20,15 +20,15 @@
       <div class="popup-content">
         <button class="close-btn" @click="closePopup">X</button>
         <div class="popup-image">
-          <img :src="selectedProduct.image" :alt="selectedProduct.name" />
+          <img :src="selectedProduct?.image" :alt="selectedProduct?.name" />
         </div>
         <div class="popup-details">
-          <h4>{{ selectedProduct.name }}</h4>
-          <p>{{ selectedProduct.price.toFixed(2) }}₺</p>
+          <h4>{{ selectedProduct?.name }}</h4>
+          <p>{{ selectedProduct?.price.toFixed(2) }}₺</p>
           <h5>BEDEN:</h5>
           <div class="size-options">
             <button
-              v-for="size in selectedProduct.sizes"
+              v-for="size in selectedProduct?.sizes"
               :key="size"
               :class="{ active: selectedSize === size }"
               @click="selectSize(size)"
@@ -49,76 +49,80 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    addToCart: {
-      type: Function,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      popupVisible: false,
-      selectedProduct: null,
-      selectedSize: null,
-      products: [
-        {
-          name: "Galatasaray T-Shirt",
-          price: 100,
-          image: "/1.webp",
-          sizes: ["S", "M", "L", "XL"],
-        },
-        {
-          name: "Galatasaray Sweatshirt",
-          price: 200,
-          image: "/2.webp",
-          sizes: ["M", "L", "XL"],
-        },
-        {
-          name: "Galatasaray Sweatshirt",
-          price: 270,
-          image: "/3.webp",
-          sizes: ["M", "L", "XL"],
-        },
-        {
-          name: "Galatasaray Sweatshirt",
-          price: 232,
-          image: "/4.webp",
-          sizes: ["M", "L", "XL"],
-        },
-        {
-          name: "Galatasaray Sweatshirt",
-          price: 1203,
-          image: "/5.webp",
-          sizes: ["M", "L", "XL"],
-        },
-      ],
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useCartStore } from '@/stores/cartStore';
+
+// Pinia store'u kullanıyoruz
+const cartStore = useCartStore();
+
+interface Product {
+  name: string;
+  price: number;
+  image: string;
+  sizes: string[];
+}
+
+const popupVisible = ref(false);
+const selectedProduct = ref<Product | null>(null); // Tip olarak 'null' ekledik
+const selectedSize = ref<string | null>(null);
+
+const products: Product[] = [
+      {
+        name: "Galatasaray T-Shirt",
+        price: 100,
+        image: "/1.webp",
+        sizes: ["S", "M", "L", "XL"],
+      },
+      {
+        name: "Galatasaray T-Shirt",
+        price: 350,
+        image: "/1.webp",
+        sizes: ["S", "M", "L", "XL"],
+      },
+      {
+        name: "Galatasaray T-Shirt",
+        price: 400,
+        image: "/1.webp",
+        sizes: ["S", "M", "L", "XL"],
+      },
+      {
+        name: "Galatasaray T-Shirt",
+        price: 7600,
+        image: "/1.webp",
+        sizes: ["S", "M", "L", "XL"],
+      },
+];
+
+
+
+// Popup açma
+const openPopup = (product: Product) => {
+  selectedProduct.value = product;
+  popupVisible.value = true;
+  selectedSize.value = null;
+};
+
+// Popup kapama
+const closePopup = () => {
+  popupVisible.value = false;
+};
+
+// Beden seçme
+const selectSize = (size: string) => {
+  selectedSize.value = size;
+};
+
+// Sepete ekleme
+const handleAddToCart = () => {
+  if (selectedProduct.value && selectedSize.value) {
+    const productWithSize = {
+      ...selectedProduct.value,
+      size: selectedSize.value,
     };
-  },
-  methods: {
-    openPopup(product) {
-      this.selectedProduct = product;
-      this.popupVisible = true;
-      this.selectedSize = null;
-    },
-    closePopup() {
-      this.popupVisible = false;
-    },
-    selectSize(size) {
-      this.selectedSize = size;
-    },
-    handleAddToCart() {
-      if (this.selectedProduct && this.selectedSize) {
-        const productWithSize = {
-          ...this.selectedProduct,
-          size: this.selectedSize,
-        };
-        this.addToCart(productWithSize);
-        this.closePopup();
-      }
-    },
-  },
+    cartStore.addToCart(productWithSize); // Pinia store'una ekle
+    closePopup(); // Popup'ı kapat
+  }
 };
 </script>
 
